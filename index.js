@@ -1,46 +1,21 @@
 // server.js
-
-// call the packages we need
-let express = require('express');        // call express
+let express = require('express');
 var path = require('path');
-let app = express();                 // define our app using express
 let bodyParser = require('body-parser');
-let connection;
 
 FCM = require('fcm-node');
-
-let SERVER_API_KEY='AIzaSyBbik6C3zdvdL87gV2aA7Rn7-vWASKYnYs'; //put your api key here
-
-let lastSnooze = new Date();
-const threshold = 10000;
-let movement = 0;
-let presence = 0;
-
+let SERVER_API_KEY = 'AIzaSyBbik6C3zdvdL87gV2aA7Rn7-vWASKYnYs';
 let validDeviceRegistrationToken = 'erzhcWuTQ6E:APA91bHCTi_2Z2MpXyu52gy249kvFAxUyo1w-stDT_HdlvZPV1JAePRTBgepuykJTUWGG-hHqlpQNqBz1Pm-r7SsTipkBjJc8EBoBJNlBVeyG71v3kSZ8FsktL4w6WiJfyZpgx0OUzBZ'; // put a valid device token here
 
+let app = express();
+let connection;
+
+let movement = 0;
+let presence = 0;
+const threshold = 10000;
+let lastSnooze = new Date();
+
 let fcmCli = new FCM(SERVER_API_KEY);
-
-let payloadOK = {
-  to: validDeviceRegistrationToken,
-  data: { // some data object (optional)
-    foo:'fooooooooooooo',
-  },
-  priority: 'high',
-  content_available: true,
-  notification: { // notification object
-    title: 'HELLO', body: 'World!', sound : "default", badge: "1"
-  }
-};
-
-let payloadError = {
-  to: "4564654654654654", // invalid registration token
-  data: {
-    url: "news"
-  },
-  priority: 'high',
-  content_available: true,
-  notification: { title: 'TEST HELLO', body: '123', sound : "default", badge: "1" }
-};
 
 let payloadMulticast = {
   registration_ids:["4564654654654654",
@@ -52,7 +27,12 @@ let payloadMulticast = {
   },
   priority: 'high',
   content_available: true,
-  notification: { title: 'Hello', body: 'Multicast', sound : "default", badge: "1" }
+  notification: {
+    title: 'Baby Moved!',
+    body: 'Snooze 10s',
+    sound : "default",
+    badge: "1"
+  }
 };
 
 let callbackLog = function (sender, err, res) {
@@ -93,13 +73,13 @@ router.post('/snooze', function (req, res) {
 });
 
 router.put('/movement', function (req, res) {
-  movement = req.body.movement;
-  res.send(movement);
+  movement = parseInt(req.body.movement);
+  res.send();
 });
 
 router.put('/presence', function (req, res) {
   console.log('presence req.body', req.body);
-  presence = req.body.presence;
+  presence = parseInt(req.body.presence);
   res.send();
 });
 
@@ -158,7 +138,7 @@ let oldStatus = 0;
 let status = 0;
 
 computeStatus = (movement, presence, diffSnooze) => {
-  if (movement && !presence) {
+  if (movement && presence === 0) {
     if (((new Date()) - lastSnooze) > threshold) {
       return 2;
     } else {
@@ -173,8 +153,8 @@ console.log('movement presence diffSnooze', movement, presence);
 setInterval(() => {
   let diffSnooze = (new Date()) - lastSnooze;
   let status = computeStatus(movement, presence, diffSnooze);
+  console.log('movement presence diffSnooze statuses', movement, presence, diffSnooze, status, oldStatus);
   if (status !== oldStatus) {
-    console.log('movement presence diffSnooze status', movement, presence, diffSnooze, status);
     switch (status) {
       case 0:
         connection.sendUTF(0);
@@ -194,4 +174,5 @@ setInterval(() => {
         console.error('Uknown state:', status);
     }
   }
+  oldStatus = status;
 }, 500);
