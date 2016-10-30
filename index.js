@@ -26,13 +26,7 @@ let payloadMulticast = {
     url: "news"
   },
   priority: 'high',
-  content_available: true,
-  notification: {
-    title: 'Baby Moved!',
-    body: 'Snooze 10s',
-    sound : "default",
-    badge: "1"
-  }
+  content_available: true
 };
 
 let callbackLog = function (sender, err, res) {
@@ -153,8 +147,8 @@ console.log('movement presence diffSnooze', movement, presence);
 setInterval(() => {
   let diffSnooze = (new Date()) - lastSnooze;
   let status = computeStatus(movement, presence, diffSnooze);
-  console.log('movement presence diffSnooze statuses', movement, presence, diffSnooze, status, oldStatus);
   if (status !== oldStatus) {
+    console.log('movement presence diffSnooze statuses', movement, presence, diffSnooze, status, oldStatus);
     switch (status) {
       case 0:
         connection.sendUTF(0);
