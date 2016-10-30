@@ -1,7 +1,52 @@
 <html>
 <head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <style>
+    #visualisation {
+      height: 300px;
+      width: 300px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Does Justine Move?</h1>
+  <script>
+    $(document).ready(function() {
+      var client = new WebSocket('ws://localhost:4000/', 'justine');
+      client.onerror = function() {
+        console.log('Connection Error');
+      };
+
+      client.onopen = function() {
+        console.log('WebSocket Client Connected');
+      };
+
+      client.onclose = function() {
+        console.log('justine Client Closed');
+      };
+
+      client.onmessage = function(e) {
+        let state = e.data;
+        switch (+state) {
+          case 0:
+            $("#visualisation").css({"background-color": "green"});
+            break;
+          case 1:
+            $("#visualisation").css({"background-color": "yellow"});
+            break;
+          case 2:
+            $("#visualisation").css({"background-color": "red"});
+            break;
+          default:
+            $("#visualisation").css({"background-color": "blue"});
+        }
+        $('#state').text(state);
+        console.log("Received: '" + state + "'");
+      };
+    });
+  </script>
+  <h1>Justine Moves</h1>
+  <div id="visualisation">
+    <p>State: <span id='state'></span></p>
+  </div>
 </body>
 </html>
